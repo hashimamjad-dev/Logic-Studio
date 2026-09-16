@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+*.local
+*.tsbuildinfo
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Third-party reference material captured for study only. Never committed.
+_reference/
