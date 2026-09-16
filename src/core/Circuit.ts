@@ -387,7 +387,14 @@ export class Circuit {
     const parts: string[] = [];
     for (const board of this.boards) parts.push(`B${board.id}@${board.position.x},${board.position.y}`);
     for (const c of this.components) {
-      parts.push(`C${c.id}:${c.defId}@${c.position.x},${c.position.y}r${c.rotation}`);
+      // Properties are part of the key because some of them change the topology -
+      // a switch position opens or closes a contact - and all of them change what a
+      // device model does, so the simulator has to notice.
+      const props = Object.keys(c.properties)
+        .sort()
+        .map((key) => `${key}=${c.properties[key]}`)
+        .join(';');
+      parts.push(`C${c.id}:${c.defId}@${c.position.x},${c.position.y}r${c.rotation}{${props}}`);
     }
     for (const w of this.wires) {
       parts.push(`W${w.id}:${connectionRefId(w.from)}>${connectionRefId(w.to)}`);

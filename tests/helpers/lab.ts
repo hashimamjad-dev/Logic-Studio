@@ -128,9 +128,12 @@ export function buildNandLab(): NandLab {
   connect(circuit, pinRef(in2, 1), holeRef(board, 'h11'), 'yellow');
 
   // Output through an LED and a current-limiting resistor back to the ground rail.
-  const led = plugInto(circuit, board, 'out-led', 1, 'h12', { properties: { span: 3 } });
-  const resistor = plugInto(circuit, board, 'pas-resistor', 1, 'i15', { properties: { span: 4 } });
-  connect(circuit, holeRef(board, 'j19'), holeRef(board, 'TN19'), 'black');
+  // The LED is deliberately placed clear of columns 10-16, which the chip's own pins
+  // occupy: sharing one of those clips would tie the LED to another gate's output.
+  connect(circuit, holeRef(board, 'h12'), holeRef(board, 'h20'), 'amber');
+  const led = plugInto(circuit, board, 'out-led', 1, 'j20', { properties: { span: 3 } });
+  const resistor = plugInto(circuit, board, 'pas-resistor', 1, 'i23', { properties: { span: 4 } });
+  connect(circuit, holeRef(board, 'j27'), holeRef(board, 'TN27'), 'black');
 
   const engine = new SimulationEngine(circuit);
 
