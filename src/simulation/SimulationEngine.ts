@@ -134,11 +134,31 @@ export class SimulationEngine {
    * event-driven path with real propagation delays takes over.
    */
   private initialSettle(): void {
-    for (let pass = 0; pass < 16; pass++) {
+    let converged = false;
+    // Sixty-four relaxation passes is far deeper than any chain of gates a student
+    // will build on a breadboard, so failing to converge means the circuit really
+    // does not have a steady state.
+    for (let pass = 0; pass < 64; pass++) {
       const before = this.netValues;
       for (const instance of this.circuit.components) this.evaluate(instance, true);
       this.resolveValues();
-      if (sameValues(before, this.netValues)) break;
+      if (sameValues(before, this.netValues)) {
+        converged = true;
+        break;
+      }
+    }
+    if (!converged) {
+      this.oscillating = true;
+      this.addDiagnostic({
+        id: 'sim.oscillating',
+        severity: 'error',
+        code: 'sim.oscillating',
+        message:
+          'This circuit has no steady state: something is oscillating. Look for an inverting loop with no clock, such as an output wired back to its own input.',
+        subjects: [],
+      });
+    } else {
+      this.oscillating = false;
     }
     this.settle();
   }
@@ -500,9 +520,12 @@ export class SimulationEngine {
       const runtime = this.runtimeOf(instance.id);
       if (runtime.damaged || !spec) continue;
 
+      // Judge the condition, not the label. Once a part is marked OVERHEATING the
+      // label is no longer OVERVOLTAGE, and testing the label here would let the
+      // stress decay again the moment it started to build up.
       const destructive =
         runtime.electrical === 'REVERSE_POLARITY' ||
-        (runtime.electrical === 'OVERVOLTAGE' && runtime.supplyVoltage > spec.absoluteMaxVoltage);
+        runtime.supplyVoltage > spec.absoluteMaxVoltage;
 
       if (!destructive) {
         runtime.stressNs = Math.max(0, runtime.stressNs - dtNs * 0.5);
@@ -514,6 +537,10 @@ export class SimulationEngine {
         runtime.damaged = true;
         runtime.electrical = 'DAMAGED';
         runtime.powered = false;
+        // A part that has just died stops driving straight away rather than
+        // holding its last output until something else happens to wake it up.
+        this.evaluate(instance, true);
+        this.resolveValues();
         this.addDiagnostic({
           id: `${instance.id}:damaged`,
           severity: 'error',

@@ -171,7 +171,7 @@ export class Workbench {
       onNew: () => this.newProject(),
       onOpen: () => this.openProject(),
       onSave: () => this.saveProject(),
-      onExport: () => this.saveProject(),
+      onExport: () => this.exportMenu(),
       onUndo: () => this.doUndo(),
       onRedo: () => this.doRedo(),
       onRun: () => this.toggleRun(),
@@ -1522,6 +1522,40 @@ export class Workbench {
     this.dirty = false;
     this.refreshPanels();
     this.dialogs.toast('Project exported as JSON.');
+  }
+
+  /** Export offers the two formats that exist, and says which one is the project. */
+  private exportMenu(): void {
+    this.dialogs.choose('Export', 'JSON is the project itself. The image is a picture of the workspace.', [
+      {
+        label: 'Project JSON',
+        description: 'The complete circuit: boards, parts, wires, junctions and settings.',
+        primary: true,
+        onSelect: () => this.saveProject(),
+      },
+      {
+        label: 'Workspace image (PNG)',
+        description: 'A screenshot of the canvas exactly as it looks now. Not a project file.',
+        onSelect: () => this.exportImage(),
+      },
+    ]);
+  }
+
+  private exportImage(): void {
+    this.render();
+    this.canvas.toBlob((blob) => {
+      if (!blob) {
+        this.dialogs.toast('The browser could not produce an image of the canvas.', 'error');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${this.metadata.name.replace(/[^\w.-]+/g, '_') || 'experiment'}.png`;
+      link.click();
+      URL.revokeObjectURL(url);
+      this.dialogs.toast('Workspace image saved.');
+    }, 'image/png');
   }
 
   private openProject(): void {
