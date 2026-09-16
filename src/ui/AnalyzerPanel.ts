@@ -135,8 +135,11 @@ export class AnalyzerPanel {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    // Until the capture is longer than the window, show the run from time zero and
+    // let it fill up; after that, scroll so the newest sample is at the right edge.
+    // Either way the axis never shows time before the simulation started.
     const windowMs = analyzer.windowMs;
-    const endTime = Math.max(simTimeMs, windowMs * 0.1);
+    const endTime = simTimeMs < windowMs ? windowMs : simTimeMs;
     const startTime = endTime - windowMs;
     const xFor = (t: number) => ((t - startTime) / windowMs) * width;
 
