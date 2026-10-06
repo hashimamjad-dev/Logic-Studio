@@ -12,6 +12,28 @@ pin 7 to ground. Wire two switches into pins 1 and 2 and an LED with a series re
 onto pin 3. Run it. Pull the VCC jumper out and watch the chip report itself as
 unpowered, because in ProtoLab it genuinely is.
 
+## Handoff
+
+This repository is self-contained. It does not require a personal machine path,
+environment variable, backend service, or network connection at runtime. A new
+contributor can continue from a clean checkout with:
+
+```bash
+npm install
+npm test
+npm run build
+npm run dev
+```
+
+Use Node.js 20 or newer. `npm run dev` prints the local development URL. The
+production build is written to `dist/`; that directory is generated and ignored by
+Git. Editor workspace files, dependency folders, coverage output, and local
+environment files are also ignored.
+
+Before handing off a change, run `npm test` and `npm run build`. The test suite is
+model-level and currently contains 134 tests covering topology, placement, wiring,
+simulation, faults, persistence, examples, and the 74xx library.
+
 ---
 
 ## Why it exists
